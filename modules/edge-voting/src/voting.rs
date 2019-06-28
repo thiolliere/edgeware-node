@@ -210,7 +210,7 @@ impl<T: Trait> Module<T> {
 			},
 		});
 
-		<VoteRecordCount<T>>::mutate(|i| *i += 1);
+		VoteRecordCount::mutate(|i| *i += 1);
 		Self::deposit_event(RawEvent::VoteCreated(id, sender, vote_type));
 		return Ok(id);
 	}

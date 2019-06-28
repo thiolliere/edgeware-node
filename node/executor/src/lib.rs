@@ -46,8 +46,8 @@ mod tests {
 	use node_primitives::{Hash, BlockNumber, AccountId};
 	use runtime_primitives::traits::{Header as HeaderT, Hash as HashT, Digest, DigestItem};
 	use runtime_primitives::{generic::Era, ApplyOutcome, ApplyError, ApplyResult, Perbill};
-	use {balances, indices, session, system, staking, consensus, timestamp, treasury, contract};
-	use contract::ContractAddressFor;
+	use {balances, indices, session, system, staking, consensus, timestamp, treasury, contracts};
+	use contracts::ContractAddressFor;
 	use system::{EventRecord, Phase};
 	use edgeware_runtime::{Header, Block, UncheckedExtrinsic, CheckedExtrinsic, Call, Runtime, Balances,
 		BuildStorage, GenesisConfig, BalancesConfig, SessionConfig, StakingConfig, System,
@@ -325,7 +325,7 @@ mod tests {
 			council_seats: Some(Default::default()),
 			timestamp: Some(Default::default()),
 			treasury: Some(Default::default()),
-			contract: Some(Default::default()),
+			contracts: Some(Default::default()),
 			sudo: Some(Default::default()),
 			grandpa: Some(GrandpaConfig {
 				authorities: vec![],
@@ -725,7 +725,7 @@ mod tests {
 		let transfer_code = wabt::wat2wasm(CODE_TRANSFER).unwrap();
 		let transfer_ch = <Runtime as system::Trait>::Hashing::hash(&transfer_code);
 
-		let addr = <Runtime as contract::Trait>::DetermineContractAddress::contract_address_for(
+		let addr = <Runtime as contracts::Trait>::DetermineContractAddress::contract_address_for(
 			&transfer_ch,
 			&[],
 			&charlie(),
@@ -743,19 +743,19 @@ mod tests {
 				CheckedExtrinsic {
 					signed: Some((charlie(), 0)),
 					function: Call::Contract(
-						contract::Call::put_code::<Runtime>(10_000, transfer_code)
+						contracts::Call::put_code::<Runtime>(10_000, transfer_code)
 					),
 				},
 				CheckedExtrinsic {
 					signed: Some((charlie(), 1)),
 					function: Call::Contract(
-						contract::Call::create::<Runtime>(10, 10_000, transfer_ch, Vec::new())
+						contracts::Call::create::<Runtime>(10, 10_000, transfer_ch, Vec::new())
 					),
 				},
 				CheckedExtrinsic {
 					signed: Some((charlie(), 2)),
 					function: Call::Contract(
-						contract::Call::call::<Runtime>(indices::address::Address::Id(addr.clone()), 10, 10_000, vec![0x00, 0x01, 0x02, 0x03])
+						contracts::Call::call::<Runtime>(indices::address::Address::Id(addr.clone()), 10, 10_000, vec![0x00, 0x01, 0x02, 0x03])
 					),
 				},
 			]
@@ -766,9 +766,9 @@ mod tests {
 		WasmExecutor::new().call(&mut t, 8, COMPACT_CODE,"Core_execute_block", &b.0).unwrap();
 
 		runtime_io::with_externalities(&mut t, || {
-			// Verify that the contract constructor worked well and code of TRANSFER contract is actually deployed.
+			// Verify that the contracts constructor worked well and code of TRANSFER contracts is actually deployed.
 			assert_eq!(
-				&contract::ContractInfoOf::<Runtime>::get(addr)
+				&contracts::ContractInfoOf::<Runtime>::get(addr)
 					.and_then(|c| c.get_alive())
 					.unwrap()
 					.code_hash,
