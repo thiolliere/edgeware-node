@@ -15,16 +15,3 @@
 // along with Edgeware.  If not, see <http://www.gnu.org/licenses/>.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-
-pub trait Trait: system::Trait {
-}
-
-decl_module! {
-	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
-	}
-}
-
-decl_storage! {
-	trait Store for Module<T: Trait> as Voting {
-	}
-}
